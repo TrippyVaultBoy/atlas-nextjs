@@ -1,14 +1,14 @@
 import bcrypt from "bcryptjs";
-import { db } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
 import { users, topics, questions } from "../../lib/placeholder-data";
 import { revalidatePath } from "next/cache";
 
-const client = await db.connect();
+const sql = await neon(`${process.env.DATABASE_URL}`);
 
 async function seedUsers() {
-  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-  await client.sql`
+  await sql`
     CREATE TABLE IF NOT EXISTS users (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -17,12 +17,12 @@ async function seedUsers() {
     );
   `;
 
-  await client.sql`DELETE FROM users`;
+  await sql`DELETE FROM users`;
 
   const insertedUsers = await Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
-      return client.sql`
+      return sql`
         INSERT INTO users (id, name, email, password)
         VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
         ON CONFLICT (id) DO NOTHING;
@@ -34,20 +34,20 @@ async function seedUsers() {
 }
 
 async function seedTopics() {
-  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-  await client.sql`
+  await sql`
     CREATE TABLE IF NOT EXISTS topics (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       title VARCHAR(255) NOT NULL
     );
   `;
 
-  await client.sql`DELETE FROM topics`;
+  await sql`DELETE FROM topics`;
 
   const insertedTopics = await Promise.all(
     topics.map(
-      (topic) => client.sql`
+      (topic) => sql`
         INSERT INTO topics (id, title)
         VALUES (${topic.id}, ${topic.title})
         ON CONFLICT (id) DO NOTHING;
@@ -59,9 +59,9 @@ async function seedTopics() {
 }
 
 async function seedQuestions() {
-  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-  await client.sql`
+  await sql`
     CREATE TABLE IF NOT EXISTS questions (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
@@ -71,11 +71,11 @@ async function seedQuestions() {
     );
   `;
 
-  await client.sql`DELETE FROM questions`;
+  await sql`DELETE FROM questions`;
 
   const insertedQuestions = await Promise.all(
     questions.map(
-      (question) => client.sql`
+      (question) => sql`
         INSERT INTO questions (id, title, topic_id, votes)
         VALUES (${question.id}, ${question.title}, ${question.topic}, ${question.votes})
         ON CONFLICT (id) DO NOTHING;
@@ -87,9 +87,9 @@ async function seedQuestions() {
 }
 
 async function seedAnswers() {
-  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-  await client.sql`
+  await sql`
     CREATE TABLE IF NOT EXISTS answers (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       answer VARCHAR(255) NOT NULL,
@@ -97,7 +97,7 @@ async function seedAnswers() {
     );
   `;
 
-  await client.sql`DELETE FROM answers`;
+  await sql`DELETE FROM answers`;
 
   const answers = [
     {
@@ -110,7 +110,7 @@ async function seedAnswers() {
 
   const insertedAnswers = await Promise.all(
     answers.map(
-      (answer) => client.sql`
+      (answer) => sql`
         INSERT INTO answers (id, answer, question_id)
         VALUES (${answer.id}, ${answer.answer}, ${answer.question_id})
         ON CONFLICT (id) DO NOTHING;
@@ -122,26 +122,26 @@ async function seedAnswers() {
 }
 
 async function clearData() {
-  await client.sql`DROP TABLE IF EXISTS questions`;
-  await client.sql`DROP TABLE IF EXISTS topics`;
-  await client.sql`DROP TABLE IF EXISTS users`;
+  await sql`DROP TABLE IF EXISTS questions`;
+  await sql`DROP TABLE IF EXISTS topics`;
+  await sql`DROP TABLE IF EXISTS users`;
 }
 
 export async function GET() {
   try {
-    await client.sql`BEGIN`;
+    await sql`BEGIN`;
     await clearData();
     await seedUsers();
     await seedTopics();
     await seedQuestions();
     await seedAnswers();
-    await client.sql`COMMIT`;
+    await sql`COMMIT`;
 
     revalidatePath("/", "layout");
 
     return Response.json({ message: "Database seeded successfully" });
   } catch (error) {
-    await client.sql`ROLLBACK`;
+    await sql`ROLLBACK`;
     console.log(error);
     return Response.json({ error }, { status: 500 });
   }
