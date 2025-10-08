@@ -24,17 +24,11 @@ export default async function Page({
       </h1>
       <AskQuestion topic={topic.id} />
       {questions.map((question) => (
-        <Link
-          key={question.id}
-          href={`/ui/questions/${question.id}`}
-          className="block hover:bg-gray-50 rounded-lg transition"
-        >
-          <Question
-            id={question.id}
-            text={question.title}
-            votes={question.votes}
-          />
-        </Link>
+        <Question
+          id={question.id}
+          text={question.title}
+          votes={question.votes}
+        />
       ))}
     </div>
   );
