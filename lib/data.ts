@@ -79,6 +79,16 @@ export async function insertQuestion(
   }
 }
 
+export async function insertAnswer(answer: Pick<Answer, "answer" | "question_id">) {
+  try {
+    const data =
+      await sql<Answer>`INSERT INTO answers (answer, question_id) VALUES (${answer.answer}, ${answer.question_id});`;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to add answer.");
+  }
+}
+
 export async function insertTopic(topic: Pick<Topic, "title">) {
   try {
     const data =

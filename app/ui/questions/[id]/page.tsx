@@ -21,7 +21,7 @@ export default async function Page({
       <h1 className="text-3xl font-black flex items-center">
         <HashtagIcon className="h-6 w-6 mr-2"/>{question.title}
       </h1>
-      <AnswerQuestion/>
+      <AnswerQuestion questionId={question.id}/>
       {answers.length > 0 ? (
         answers.map((answer) => (
           <Answer key={answer.id} id={answer.id} text={answer.answer} />

@@ -1,10 +1,12 @@
-export function AnswerQuestion() {
+import { addAnswer } from "@/lib/actions";
+
+export function AnswerQuestion({ questionId }: { questionId: string }) {
   return (
-    <form className="relative my-8">
-      <input type="hidden" className="hidden" />
+    <form className="relative my-8" action={addAnswer}>
+      <input type="hidden" name="answer_id" value={questionId}/>
       <input
         type="text"
-        name="title"
+        name="answer"
         placeholder="Answer question"
         className="mt-1 block w-full rounded-md border border-atlas-white-300 bg-inherit py-3 pl-3 pr-28 text-lg text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-3 focus:ring-atlas-teal"
       />
