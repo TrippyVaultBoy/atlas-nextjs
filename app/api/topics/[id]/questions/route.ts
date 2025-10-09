@@ -1,9 +1,12 @@
 import { fetchQuestions } from "@/lib/data";
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request, {params}: {params: {id: string}}) {
+export async function GET(
+  request: Request,
+  context: RouteContext<'/api/topics/[id]/questions'>
+) {
     try {
-        const topicId = await params.id;
+        const topicId = (await context.params).id;
         const questions = await fetchQuestions(topicId);
         
         return NextResponse.json(questions);
